@@ -24,6 +24,9 @@ instance FromJSON LogstashMessage where
                         <*> v .: "message"
     parseJSON _          = mzero
 
+emptyLSMessage :: T.Text -> LogstashMessage
+emptyLSMessage m = LogstashMessage "empty" "dummy" [] Null m
+
 instance ToJSON LogstashMessage where
     toJSON (LogstashMessage ty s ta f c) = object [ "@type"   .= ty
                                                   , "@source" .= s
