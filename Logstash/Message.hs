@@ -21,7 +21,7 @@ instance FromJSON LogstashMessage where
                         <*> v .: "@source"
                         <*> v .: "@tags"
                         <*> v .: "@fields"
-                        <*> v .: "message"
+                        <*> v .: "@message"
     parseJSON _          = mzero
 
 emptyLSMessage :: T.Text -> LogstashMessage
@@ -32,7 +32,7 @@ instance ToJSON LogstashMessage where
                                                   , "@source" .= s
                                                   , "@tags"   .= ta
                                                   , "@fields" .= f
-                                                  , "message" .= c
+                                                  , "@message" .= c
                                                   ]
 
 value2logstash :: Value -> Maybe LogstashMessage
@@ -45,7 +45,7 @@ value2logstash (Object m) =
         mtags = case HM.lookup "@tags" m of
                     Just (Array v) -> toTags (V.toList v)
                     Nothing -> Nothing
-        mmsg  = case HM.lookup "message" m of
+        mmsg  = case HM.lookup "@message" m of
                     Just (String x) -> x
                     _ -> ""
         toTags :: [Value] -> Maybe [T.Text]
