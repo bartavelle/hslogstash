@@ -7,6 +7,9 @@ import Control.Monad
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Vector as V
 
+{-| The Logstash message, as described in <https://github.com/logstash/logstash/wiki/logstash's-internal-message-format>.
+Please not there is no timestamp, as the logstash server will add it.
+-}
 data LogstashMessage = LogstashMessage
                      { logStashType    :: T.Text
                      , logStashSource  :: T.Text
@@ -24,6 +27,9 @@ instance FromJSON LogstashMessage where
                         <*> v .: "@message"
     parseJSON _          = mzero
 
+{-| As the name implies, this creates a dummy Logstash message, only
+updating the message field.
+-}
 emptyLSMessage :: T.Text -> LogstashMessage
 emptyLSMessage m = LogstashMessage "empty" "dummy" [] Null m
 
@@ -35,6 +41,9 @@ instance ToJSON LogstashMessage where
                                                   , "@message" .= c
                                                   ]
 
+{-| This will try to convert an arbitrary JSON value into
+a "LogstashMessage".
+-}
 value2logstash :: Value -> Maybe LogstashMessage
 value2logstash (Object m) =
     let mtype = HM.lookup "@type"   m
