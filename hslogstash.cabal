@@ -16,6 +16,7 @@ cabal-version:       >=1.8
 
 library
   exposed-modules:     Logstash.Message, Logstash.IO
-  extensions:          OverloadedStrings
+  extensions:          OverloadedStrings, BangPatterns
+  ghc-options:         -Wall -O
   -- other-modules:       
-  build-depends:       base <5, aeson, network, bytestring, text, vector, unordered-containers
+  build-depends:       base <5, aeson, network, bytestring, text, vector, unordered-containers, time, text-format, attoparsec
