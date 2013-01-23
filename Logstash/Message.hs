@@ -31,13 +31,13 @@ instance FromJSON LogstashMessage where
 updating the message field.
 -}
 emptyLSMessage :: T.Text -> LogstashMessage
-emptyLSMessage m = LogstashMessage "empty" "dummy" [] Null m
+emptyLSMessage m = LogstashMessage "empty" "dummy" [] (object []) m
 
 instance ToJSON LogstashMessage where
-    toJSON (LogstashMessage ty s ta f c) = object [ "@type"   .= ty
-                                                  , "@source" .= s
-                                                  , "@tags"   .= ta
-                                                  , "@fields" .= f
+    toJSON (LogstashMessage ty s ta f c) = object [ "@type"    .= ty
+                                                  , "@source"  .= s
+                                                  , "@tags"    .= ta
+                                                  , "@fields"  .= f
                                                   , "@message" .= c
                                                   ]
 
