@@ -1,0 +1,5 @@
+hslogstash (0.1.0.1) UNRELEASED; urgency=low
+
+  * Fixes bad emptyLSMessage construction.
+
+ -- Bartavelle <bartavelle@gmail.com>  Wed, 23 Jan 2013 16:40:29 +0100
