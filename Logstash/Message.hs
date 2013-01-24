@@ -31,7 +31,7 @@ instance FromJSON LogstashMessage where
                         <*> v .: "@tags"
                         <*> v .: "@fields"
                         <*> v .: "@message"
-                        <*> fmap parseLogstashTime (v .: "@timestamp")
+                        <*> v .: "@timestamp"
     parseJSON _          = mzero
 
 {-| As the name implies, this creates a dummy Logstash message, only
@@ -48,7 +48,7 @@ instance ToJSON LogstashMessage where
                                                        , "@message" .= c
                                                        ] ++ case ts of
                                                                 Nothing -> []
-                                                                Just  t -> [ "@timestamp" .= logstashTimestamp t ]
+                                                                Just  t -> [ "@timestamp" .= t ]
 
 -- | This formats an UTCTime in what logstash expects
 logstashTimestamp :: UTCTime -> T.Text
