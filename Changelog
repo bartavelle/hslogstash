@@ -1,3 +1,9 @@
+hslogstash (0.2.2) lucid; urgency=low
+
+  * Added a Logstash server conduit.
+
+ -- Bartavelle <bartavelle@gmail.com>  Fri, 25 Jan 2013 19:22:26 +0100
+
 hslogstash (0.2.1) lucid; urgency=low
 
   * Fixed bug in the index name.
