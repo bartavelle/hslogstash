@@ -4,5 +4,6 @@ hslogstash (0.2.0) UNRELEASED; urgency=low
   * Add support for the @timestamp field.
   * Use the built in UTFTime serialization when possible
   * Quick Redis conduit
+  * Quick ElasticSearch conduit
 
- -- Bartavelle <bartavelle@gmail.com>  Fri, 25 Jan 2013 16:10:37 +0100
+ -- Bartavelle <bartavelle@gmail.com>  Fri, 25 Jan 2013 16:11:00 +0100
