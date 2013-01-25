@@ -11,9 +11,9 @@ import Database.Redis hiding (String, decode)
 import Control.Monad (void)
 import Control.Monad.IO.Class (liftIO)
 
-redisSource :: (MonadResource m) => HostName -> PortID -> BS.ByteString -> Source m BS.ByteString
+redisSource :: (MonadResource m) => HostName -> Int -> BS.ByteString -> Source m BS.ByteString
 redisSource h p list =
-    let cinfo = defaultConnectInfo { connectHost = h, connectPort = p }
+    let cinfo = defaultConnectInfo { connectHost = h, connectPort = PortNumber $ fromIntegral p }
         pull = do
             o <- blpop [list] 0
             case o of
