@@ -15,8 +15,8 @@ build-type:          Simple
 cabal-version:       >=1.8
 
 library
-  exposed-modules:     Logstash.Message, Logstash.IO
+  exposed-modules:     Logstash.Message, Logstash.IO, Data.Conduit.Redis
   extensions:          OverloadedStrings, BangPatterns
   ghc-options:         -Wall -O
   -- other-modules:       
-  build-depends:       base <5, aeson, network, bytestring, text, vector, unordered-containers, time, text-format, attoparsec
+  build-depends:       base <5, aeson, network, bytestring, text, vector, unordered-containers, time, text-format, attoparsec, hedis, conduit, transformers

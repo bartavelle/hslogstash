@@ -3,5 +3,6 @@ hslogstash (0.2.0) UNRELEASED; urgency=low
   * Fixes bad emptyLSMessage construction.
   * Add support for the @timestamp field.
   * Use the built in UTFTime serialization when possible
+  * Quick Redis conduit
 
- -- Bartavelle <bartavelle@gmail.com>  Thu, 24 Jan 2013 14:52:22 +0100
+ -- Bartavelle <bartavelle@gmail.com>  Fri, 25 Jan 2013 16:10:37 +0100
