@@ -1,3 +1,9 @@
+hslogstash (0.2.1) lucid; urgency=low
+
+  * Fixed bug in the index name.
+
+ -- Bartavelle <bartavelle@gmail.com>  Fri, 25 Jan 2013 18:29:40 +0100
+
 hslogstash (0.2.0) lucid; urgency=low
 
   * Fixes bad emptyLSMessage construction.

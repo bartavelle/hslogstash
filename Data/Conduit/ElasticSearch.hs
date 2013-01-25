@@ -45,7 +45,7 @@ esSink r h p = CL.mapM doIndexA
                 Nothing -> return $! Left (input, object [ "error" .= String "Time was not supplied" ])
                 Just (UTCTime day _) -> do
                     let (y,m,d) = toGregorian day
-                        req = defR2 { path = BSL.toStrict (E.encodeUtf8 (format "/logstash-{}-{}-{}/{}/" (y, left 2 '0' m, left 2 '0' d, logstashType input)))
+                        req = defR2 { path = BSL.toStrict (E.encodeUtf8 (format "/logstash-{}.{}.{}/{}/" (y, left 2 '0' m, left 2 '0' d, logstashType input)))
                                     , requestBody = RequestBodyLBS (encode input)
                                     }
                     res <- liftIO $ safeQuery req
