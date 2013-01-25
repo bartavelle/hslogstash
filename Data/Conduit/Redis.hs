@@ -1,7 +1,6 @@
-module Data.Conduit.Redis where
-{- |
-    Quick conduit for reading from redis sources.
+{-| Quick conduit for reading from Redis lists. Not tested much, and probably quite slow.
 -}
+module Data.Conduit.Redis where
 
 import Data.Conduit
 import Data.Conduit.Util
@@ -11,7 +10,10 @@ import Database.Redis hiding (String, decode)
 import Control.Monad (void)
 import Control.Monad.IO.Class (liftIO)
 
-redisSource :: (MonadResource m) => HostName -> Int -> BS.ByteString -> Source m BS.ByteString
+redisSource :: (MonadResource m) => HostName -- ^ Hostname of the Redis server
+                -> Int -- ^ Port of the Redis server (usually 6379)
+                -> BS.ByteString -- ^ Name of the list
+                -> Source m BS.ByteString
 redisSource h p list =
     let cinfo = defaultConnectInfo { connectHost = h, connectPort = PortNumber $ fromIntegral p }
         pull = do

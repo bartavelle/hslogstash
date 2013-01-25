@@ -1,4 +1,7 @@
-module Data.Conduit.ElasticSearch where
+{-| This module exports "Conduit" interfaces to ElasticSearch. It is
+totally experimental.
+-}
+module Data.Conduit.ElasticSearch (esSink) where
 
 import Prelude hiding (catch)
 import Control.Exception
@@ -20,9 +23,12 @@ safeQuery :: Request (ResourceT IO) -> IO (Response BSL.ByteString)
 safeQuery req = catch (withManager $ httpLbs req) (\e -> print (e :: SomeException) >> threadDelay 500000 >> safeQuery req)
 
 -- | Takes JSONifiable values, and returns the result of the ES request
--- | along with the value in case of errors, or ES's values in case of
--- | success
-esSink :: (MonadResource m) => Maybe (Request m) -> BS.ByteString -> Int -> Conduit LogstashMessage m (Either (LogstashMessage, Value) Value)
+-- along with the value in case of errors, or ES's values in case of
+-- success
+esSink :: (MonadResource m) => Maybe (Request m) -- ^ Defaults parameters for the http request to ElasticSearch. Use "Nothing" for defaults.
+            -> BS.ByteString -- ^ Hostname of the ElasticSearch server
+            -> Int -- ^ Port of the HTTP interface (usually 9200)
+            -> Conduit LogstashMessage m (Either (LogstashMessage, Value) Value)
 esSink r h p = CL.mapM doIndexA
     where
         defR1 = case r of
