@@ -1,4 +1,4 @@
-hslogstash (0.2.0) UNRELEASED; urgency=low
+hslogstash (0.2.0) lucid; urgency=low
 
   * Fixes bad emptyLSMessage construction.
   * Add support for the @timestamp field.
@@ -7,4 +7,4 @@ hslogstash (0.2.0) UNRELEASED; urgency=low
   * Quick ElasticSearch conduit.
   * Documentation updates, and example program.
 
- -- Bartavelle <bartavelle@gmail.com>  Fri, 25 Jan 2013 17:09:19 +0100
+ -- Bartavelle <bartavelle@gmail.com>  Fri, 25 Jan 2013 17:12:22 +0100
