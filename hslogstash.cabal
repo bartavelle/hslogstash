@@ -21,6 +21,6 @@ source-repository head
 library
   exposed-modules:     Logstash.Message, Logstash.IO, Data.Conduit.Redis, Data.Conduit.ElasticSearch
   extensions:          OverloadedStrings, BangPatterns
-  ghc-options:         -Wall -O
+  ghc-options:         -Wall
   -- other-modules:       
   build-depends:       base <5, aeson, network, bytestring, text, vector, unordered-containers, time, text-format, attoparsec, hedis, conduit, transformers, http-conduit
