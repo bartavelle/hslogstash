@@ -3,7 +3,6 @@
 module Data.Conduit.Redis where
 
 import Data.Conduit
-import Data.Conduit.Util
 import qualified Data.ByteString.Char8 as BS
 import Network
 import Database.Redis hiding (String, decode)
@@ -16,15 +15,10 @@ redisSource :: (MonadResource m) => HostName -- ^ Hostname of the Redis server
                 -> Source m BS.ByteString
 redisSource h p list =
     let cinfo = defaultConnectInfo { connectHost = h, connectPort = PortNumber $ fromIntegral p }
-        pull = do
-            o <- blpop [list] 0
+        myPipe :: (MonadResource m) => Connection -> Source m BS.ByteString
+        myPipe conn = do
+            o <- liftIO $ runRedis conn (blpop [list] 0)
             case o of
-                Right (Just (_,k)) -> return k
-                _ -> pull
-    in  sourceStateIO (connect cinfo)
-                      (\conn -> runRedis conn (void quit))
-                      (\conn -> do
-                          o <- liftIO $ runRedis conn pull
-                          return (StateOpen conn o)
-                      )
-
+                Right (Just (_,k)) -> yield k
+                _ -> return ()
+    in  bracketP (connect cinfo) (\conn -> runRedis conn (void quit)) myPipe
