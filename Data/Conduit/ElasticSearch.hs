@@ -25,11 +25,11 @@ safeQuery req = catch (withManager $ httpLbs req) (\e -> print (e :: SomeExcepti
 -- | Takes JSONifiable values, and returns the result of the ES request
 -- along with the value in case of errors, or ES's values in case of
 -- success
-esSink :: (MonadResource m) => Maybe (Request m) -- ^ Defaults parameters for the http request to ElasticSearch. Use "Nothing" for defaults.
+esConduit :: (MonadResource m) => Maybe (Request m) -- ^ Defaults parameters for the http request to ElasticSearch. Use "Nothing" for defaults.
             -> BS.ByteString -- ^ Hostname of the ElasticSearch server
             -> Int -- ^ Port of the HTTP interface (usually 9200)
             -> Conduit LogstashMessage m (Either (LogstashMessage, Value) Value)
-esSink r h p = CL.mapM doIndexA
+esConduit r h p = CL.mapM doIndexA
     where
         defR1 = case r of
                     Just x -> x
