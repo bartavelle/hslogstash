@@ -1,7 +1,8 @@
 hslogstash (0.2.2) lucid; urgency=low
 
-  * Added a Logstash server conduit.
+  * Added a Logstash server source.
   * Added a "safe" retrying socket Sink.
+  * Properly renamed the ElasticSearch "Sink" to "Conduit".
 
  -- Bartavelle <bartavelle@gmail.com>  Sun, 27 Jan 2013 23:31:54 +0100
 
