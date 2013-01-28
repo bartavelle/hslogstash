@@ -1,7 +1,7 @@
 {-| This module exports "Conduit" interfaces to ElasticSearch. It is
 totally experimental.
 -}
-module Data.Conduit.ElasticSearch (esSink) where
+module Data.Conduit.ElasticSearch (esConduit) where
 
 import Prelude hiding (catch)
 import Control.Exception
