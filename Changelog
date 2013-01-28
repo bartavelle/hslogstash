@@ -4,8 +4,9 @@ hslogstash (0.2.2) lucid; urgency=low
   * Added a "safe" retrying socket Sink.
   * Properly renamed the ElasticSearch "Sink" to "Conduit".
   * The Redis source now retrieves bulk data.
+  * The ElasticSearch sink now can use the bulk API.
 
- -- Bartavelle <bartavelle@gmail.com>  Mon, 28 Jan 2013 12:04:27 +0100
+ -- Bartavelle <bartavelle@gmail.com>  Mon, 28 Jan 2013 21:01:26 +0100
 
 hslogstash (0.2.1) lucid; urgency=low
 
