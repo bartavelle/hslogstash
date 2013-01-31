@@ -26,12 +26,12 @@ data LogstashMessage = LogstashMessage
 
 instance FromJSON LogstashMessage where
     parseJSON (Object v) = LogstashMessage
-                        <$> v .: "@type"
-                        <*> v .: "@source"
-                        <*> v .: "@tags"
-                        <*> v .: "@fields"
-                        <*> v .: "@message"
-                        <*> v .: "@timestamp"
+                        <$> v .:  "@type"
+                        <*> v .:  "@source"
+                        <*> v .:  "@tags"
+                        <*> v .:  "@fields"
+                        <*> v .:  "@message"
+                        <*> v .:? "@timestamp"
     parseJSON _          = mzero
 
 {-| As the name implies, this creates a dummy Logstash message, only
