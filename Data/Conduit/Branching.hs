@@ -1,5 +1,5 @@
 -- | Branching conduits ...
-module Data.Conduit.Branching (mkBranchingConduit) where
+module Data.Conduit.Branching (mkBranchingConduit, branchConduits) where
 
 import Data.Conduit
 import qualified Data.Conduit.List as CL
@@ -8,6 +8,7 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Concurrent (MVar, putMVar, takeMVar, newEmptyMVar)
 import qualified Data.IntMap as IntMap
 import Data.Maybe (mapMaybe)
+import Control.Concurrent.ParallelIO
 
 mkBranchingConduit :: (MonadResource m)
                     => Int -- ^ Number of branches
@@ -32,3 +33,14 @@ mvarSource mv = do
     case v of
         Just x -> yield x >> mvarSource mv
         Nothing -> return ()
+
+branchConduits :: Source (ResourceT IO) a       -- ^ The source to branch from
+               -> (a -> [Int])                  -- ^ The branching function (0 is the first sink)
+               -> [Sink a (ResourceT IO) ()]    -- ^ The destination sinks
+               -> IO ()                         -- ^ Results of the sinks
+branchConduits src brfunc sinks = do
+    (newsink, sources) <- mkBranchingConduit (length sinks) brfunc
+    let srcconduit = src $$ newsink
+        dstconduits = map (uncurry ($$)) (zip sources sinks)
+        actions = map runResourceT (srcconduit : dstconduits)
+    parallel_ actions

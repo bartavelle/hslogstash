@@ -23,4 +23,4 @@ library
   extensions:          OverloadedStrings, BangPatterns
   ghc-options:         -Wall
   -- other-modules:       
-  build-depends:       base <5, aeson, network, bytestring, text, vector, unordered-containers, time, text-format, attoparsec, hedis, conduit, transformers, http-conduit, iconv, network-conduit, containers
+  build-depends:       base <5, aeson, network, bytestring, text, vector, unordered-containers, time, text-format, attoparsec, hedis, conduit, transformers, http-conduit, iconv, network-conduit, containers, parallel-io
