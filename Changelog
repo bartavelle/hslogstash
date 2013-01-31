@@ -6,8 +6,9 @@ hslogstash (0.2.2) lucid; urgency=low
   * The Redis source now retrieves bulk data.
   * The ElasticSearch sink now can use the bulk API.
   * Added a "safe" retrying Redis Sink.
+  * Modified the Logstash listener source API.
 
- -- Bartavelle <bartavelle@gmail.com>  Thu, 31 Jan 2013 18:49:27 +0100
+ -- Bartavelle <bartavelle@gmail.com>  Thu, 31 Jan 2013 18:48:30 +0100
 
 hslogstash (0.2.1) lucid; urgency=low
 
