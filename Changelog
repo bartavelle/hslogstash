@@ -1,3 +1,9 @@
+hslogstash (0.2.3) lucid; urgency=low
+
+  * New branching system
+
+ -- Bartavelle <bartavelle@gmail.com>  Fri, 01 Feb 2013 15:33:58 +0100
+
 hslogstash (0.2.2) lucid; urgency=low
 
   * Added a Logstash server source.
