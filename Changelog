@@ -10,7 +10,7 @@ hslogstash (0.2.2) lucid; urgency=low
   * Added a utility function for putting a correct timestamp in logstash
     messages that lack one.
 
- -- Bartavelle <bartavelle@gmail.com>  Fri, 01 Feb 2013 09:48:57 +0100
+ -- Bartavelle <bartavelle@gmail.com>  Fri, 01 Feb 2013 10:36:37 +0100
 
 hslogstash (0.2.1) lucid; urgency=low
 
