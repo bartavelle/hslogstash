@@ -115,3 +115,11 @@ value2logstash (Object m) =
            (Just (String t), Just (String s), Just tags) -> Just $ LogstashMessage t s tags mflds mmsg mts
            _ -> Nothing
 value2logstash _ = Nothing
+
+-- | Adds the current timestamp if it is not provided.
+addLogstashTime :: LogstashMessage -> IO LogstashMessage
+addLogstashTime msg = case logstashTime msg of
+                          Just _  -> return msg
+                          Nothing -> do
+                              curtime <- getCurrentTime
+                              return msg { logstashTime = Just curtime }
