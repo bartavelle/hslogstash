@@ -33,7 +33,7 @@ safePush list mconn cinfo input = catch mypush (\SomeException{} -> resetMVar)
             x <- runRedis conn (lpush list [input])
             case x of
                 Left (SingleLine "OK") -> return ()
-                Right 1 -> return ()
+                Right _ -> return ()
                 err -> BS.putStrLn ("retrying ... " `BS.append` BS.pack (show err)) >> threadDelay 500000 >> safePush list mconn cinfo input
 
 popN :: BS.ByteString -> Int -> Redis [BS.ByteString]
