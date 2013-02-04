@@ -19,7 +19,7 @@ source-repository head
   location: git://github.com/bartavelle/hslogstash.git
 
 library
-  exposed-modules:     Logstash.Message, Logstash.IO, Data.Conduit.Redis, Data.Conduit.ElasticSearch, Data.Conduit.Logstash, Data.Conduit.Network.Retry, Data.Conduit.Branching
+  exposed-modules:     Logstash.Message, Logstash.IO, Data.Conduit.Redis, Data.Conduit.ElasticSearch, Data.Conduit.Logstash, Data.Conduit.Network.Retry, Data.Conduit.Branching, Data.Conduit.Misc
   extensions:          OverloadedStrings, BangPatterns
   ghc-options:         -Wall
   -- other-modules:       
