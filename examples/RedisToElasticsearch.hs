@@ -16,7 +16,7 @@ import Data.Aeson
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import Data.Maybe (mapMaybe)
-
+import Data.Conduit.Misc
 
 endsink :: (MonadResource m) => Either (LogstashMessage, Value) Value -> m ()
 endsink (Left x) = liftIO (print x)
@@ -27,7 +27,9 @@ main = do
     args <- getArgs
     when (length args /= 5) (error "Usage: redis2es redishost redisport redislist eshost esport")
     let [redishost, redisport, redislist, eshost, esport] = args
-    runResourceT $ redisSource redishost (read redisport) (BS.pack redislist) 100
-                    $= CL.map (mapMaybe (decode . BSL.fromStrict))
-                    $= esConduit Nothing (BS.pack eshost) (read esport)
+    runResourceT $ redisSource redishost (read redisport) (BS.pack redislist) 100 1
+                    $= concatFlush 100 -- convert to a flush conduit
+                    $= mapFlushMaybe (decode . BSL.fromStrict) -- decode the json messages
+                    $= groupFlush -- regroup lists
+                    $= esConduit Nothing (BS.pack eshost) (read esport) -- send to ES
                     $$ CL.mapM_ (mapM_ endsink)
