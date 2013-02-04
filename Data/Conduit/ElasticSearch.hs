@@ -44,30 +44,30 @@ esConduit r h p = CL.map (map prepareBS) =$= CL.mapM sendBulk
                       , method = "POST"
                       , checkStatus = (\_ _ -> Nothing)
                       }
-        prepareBS :: LogstashMessage -> Either (LogstashMessage, Value) (LogstashMessage, Value)
+        prepareBS :: LogstashMessage -> Either (LogstashMessage, Value) (LogstashMessage, Value, Value)
         prepareBS input =
             case logstashTime input of
                 Nothing -> Left (input, object [ "error" .= String "Time was not supplied" ])
                 Just (UTCTime day _) ->
                     let (y,m,d) = toGregorian day
                         index = BSL.toStrict (E.encodeUtf8 (format "logstash-{}.{}.{}" (y, left 2 '0' m, left 2 '0' d)))
-                    in  Right (input, object [ "index" .= object [ "_index" .= index, "_type" .= logstashType input, "_source" .= toJSON input ] ])
-        sendBulk :: (MonadResource m) => [Either (LogstashMessage, Value) (LogstashMessage, Value)] -> m [Either (LogstashMessage, Value) Value]
+                    in  Right (input, object [ "index" .= object [ "_index" .= index, "_type" .= logstashType input ] ], toJSON input)
+        sendBulk :: (MonadResource m) => [Either (LogstashMessage, Value) (LogstashMessage, Value, Value)] -> m [Either (LogstashMessage, Value) Value]
         sendBulk input =
             let (errors, tosend) = partitionEithers input
                 lerrors = map Left errors
-                body = BSL.intercalate "\n{}\n" (map (encode . snd) tosend) `BSL.append` "\n{}\n"
+                body = BSL.unlines $ concatMap (\(_,x,y) -> [encode x, encode y]) tosend
                 req = defR2 { requestBody = RequestBodyLBS body }
             in do
-                liftIO $ BSL.putStrLn body
                 res <- fmap (responseBody) $ liftIO $ safeQuery req
                 let genericError er = return (Left (emptyLSMessage "error", object [ "error" .= (T.pack er), "data" .= res ]) : lerrors)
                     getObject st (Object hh) = HM.lookup st hh
                     getObject _ _ = Nothing
+                    fst3 (a,_,_) = a
                     items = decode res >>= getObject "items"
                     extractErrors x = if (getObject "create" (snd x) >>= getObject "ok") == Just (Bool True)
                                         then Right (snd x)
                                         else Left x
                 case items of
-                    Just (Array v) -> return $ map extractErrors (zip (map fst tosend) (V.toList v)) ++ lerrors
+                    Just (Array v) -> return $ map extractErrors (zip (map fst3 tosend) (V.toList v)) ++ lerrors
                     _ -> genericError "Can't find items"
