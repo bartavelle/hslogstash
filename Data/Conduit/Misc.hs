@@ -42,11 +42,3 @@ mchunk _ f (Chunk x) = f x
 -- | Like mapMaybe, but in a Flush. Will not touch the Flush values.
 mapFlushMaybe :: (Monad m) => (a -> Maybe b) -> Conduit (Flush a) m (Flush b)
 mapFlushMaybe f = awaitForever $ mchunk (yield Flush) (maybe (return ()) (yield . Chunk) . f)
-{-
-\input -> case input of
-                                               Flush -> yield Flush
-                                               Chunk x -> case f x of
-                                                              Nothing -> return ()
-                                                              Just y  -> yield (Chunk y)
-
--}
