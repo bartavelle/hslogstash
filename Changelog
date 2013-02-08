@@ -4,7 +4,7 @@ hslogstash (0.2.3) lucid; urgency=low
   * Modified the Redis source so that the timeout value is controllable.
   * Various utilities have been added to handle Flush conduits.
 
- -- Bartavelle <bartavelle@gmail.com>  Mon, 04 Feb 2013 14:38:11 +0100
+ -- Bartavelle <bartavelle@gmail.com>  Fri, 08 Feb 2013 22:40:54 +0100
 
 hslogstash (0.2.2) lucid; urgency=low
 
