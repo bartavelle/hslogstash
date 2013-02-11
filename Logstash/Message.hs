@@ -123,3 +123,7 @@ addLogstashTime msg = case logstashTime msg of
                           Nothing -> do
                               curtime <- getCurrentTime
                               return msg { logstashTime = Just curtime }
+
+addLogstashTag :: T.Text -> LogstashMessage -> LogstashMessage
+addLogstashTag tag msg = msg { logstashTags = tag : logstashTags msg }
+
