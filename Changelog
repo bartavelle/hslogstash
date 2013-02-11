@@ -3,8 +3,9 @@ hslogstash (0.2.3) lucid; urgency=low
   * New branching system
   * Modified the Redis source so that the timeout value is controllable.
   * Various utilities have been added to handle Flush conduits.
+  * Specify an arbitrary prefix for elasticsearch indexes.
 
- -- Bartavelle <bartavelle@gmail.com>  Fri, 08 Feb 2013 22:40:54 +0100
+ -- Bartavelle <bartavelle@gmail.com>  Mon, 11 Feb 2013 18:25:57 +0100
 
 hslogstash (0.2.2) lucid; urgency=low
 

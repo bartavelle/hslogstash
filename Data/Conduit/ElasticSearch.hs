@@ -32,8 +32,9 @@ safeQuery req = catch (withManager $ httpLbs req) (\e -> print (e :: SomeExcepti
 esConduit :: (MonadResource m) => Maybe (Request m) -- ^ Defaults parameters for the http request to ElasticSearch. Use "Nothing" for defaults.
             -> BS.ByteString -- ^ Hostname of the ElasticSearch server
             -> Int -- ^ Port of the HTTP interface (usually 9200)
+            -> T.Text -- ^ Prefix of the index (usually logstash)
             -> Conduit [LogstashMessage] m [Either (LogstashMessage, Value) Value]
-esConduit r h p = CL.map (map prepareBS) =$= CL.mapM sendBulk
+esConduit r h p prefix = CL.map (map prepareBS) =$= CL.mapM sendBulk
     where
         defR1 = case r of
                     Just x -> x
@@ -50,7 +51,7 @@ esConduit r h p = CL.map (map prepareBS) =$= CL.mapM sendBulk
                 Nothing -> Left (input, object [ "error" .= String "Time was not supplied" ])
                 Just (UTCTime day _) ->
                     let (y,m,d) = toGregorian day
-                        index = BSL.toStrict (E.encodeUtf8 (format "logstash-{}.{}.{}" (y, left 2 '0' m, left 2 '0' d)))
+                        index = BSL.toStrict (E.encodeUtf8 (format "{}-{}.{}.{}" (prefix, y, left 2 '0' m, left 2 '0' d)))
                     in  Right (input, object [ "index" .= object [ "_index" .= index, "_type" .= logstashType input ] ], toJSON input)
         sendBulk :: (MonadResource m) => [Either (LogstashMessage, Value) (LogstashMessage, Value, Value)] -> m [Either (LogstashMessage, Value) Value]
         sendBulk input =
