@@ -1,6 +1,0 @@
-Package: testlogstash
-Version: VERSIONNUMBER
-Maintainer: MAINTAINER
-Files: TestLogstash /usr/local/bin
-Architecture: amd64
-Description: Utilitaire permettant d'envoyer des messages arbitraires dans logstash.
