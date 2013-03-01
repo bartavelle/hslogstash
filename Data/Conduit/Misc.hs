@@ -13,9 +13,9 @@ concat = awaitForever (mapM_ yield)
 concatFlush :: (Monad m) => Integer -> Conduit [a] m (Flush a)
 concatFlush mx = concatFlush' 0
     where
-        concatFlush' x = awaitE >>= either return (\input -> if null input
-                                                                  then yield Flush >> concatFlush' 0
-                                                                  else foldM sendf x input >>= concatFlush'
+        concatFlush' x = await >>= maybe (return ()) (\input -> if null input
+                                                                    then yield Flush >> concatFlush' 0
+                                                                    else foldM sendf x input >>= concatFlush'
                                                   )
         sendf curx ev = do
             yield (Chunk ev)
@@ -28,7 +28,7 @@ concatFlush mx = concatFlush' 0
 groupFlush :: (Monad m) => Conduit (Flush a) m [a]
 groupFlush = grouper []
     where
-        grouper lst = awaitE >>= either return (handle lst)
+        grouper lst = await >>= maybe (return ()) (handle lst)
         handle lst Flush = do
             unless (null lst) (yield (reverse lst))
             grouper []

@@ -23,7 +23,7 @@ targeted at protocols where only a full message makes sense.
 
 This is used to send a full JSON object to Logstash.
 -}
-sinkSocketRetry :: MonadResource m => IO Socket -> Int -> IO () -> GInfSink ByteString m
+sinkSocketRetry :: MonadResource m => IO Socket -> Int -> IO () -> Consumer ByteString m ()
 sinkSocketRetry mkSocket delay exeptionCallback =
     let
         safeMkSocket :: IO Socket
@@ -36,11 +36,11 @@ sinkSocketRetry mkSocket delay exeptionCallback =
                 safeMkSocket >>= putMVar s
                 threadDelay delay
                 safeSend s o
-        push :: MonadResource m => MVar Socket -> GInfSink ByteString m
-        push s = awaitE >>= either return (\bs -> lift (liftIO $ safeSend s bs) >> push s)
+        push :: MonadResource m => MVar Socket -> Consumer ByteString m ()
+        push s = await >>= maybe (return ()) (\bs -> lift (liftIO $ safeSend s bs) >> push s)
     in  bracketP (safeMkSocket >>= newMVar) (takeMVar >=> close) push
 
 -- | A specialization of the previous Sink that opens a TCP connection.
-tcpSinkRetry :: MonadResource m => ByteString -> Int -> Int -> IO () -> GInfSink ByteString m
+tcpSinkRetry :: MonadResource m => ByteString -> Int -> Int -> IO () -> Consumer ByteString m ()
 tcpSinkRetry host port = sinkSocketRetry (fmap fst (getSocket host port))
 

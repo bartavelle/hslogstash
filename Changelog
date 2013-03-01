@@ -4,8 +4,9 @@ hslogstash (0.2.3) lucid; urgency=low
   * Modified the Redis source so that the timeout value is controllable.
   * Various utilities have been added to handle Flush conduits.
   * Specify an arbitrary prefix for elasticsearch indexes.
+  * Updated to the conduits 1.0 API.
 
- -- Bartavelle <bartavelle@gmail.com>  Mon, 11 Feb 2013 18:25:57 +0100
+ -- Bartavelle <bartavelle@gmail.com>  Fri, 01 Mar 2013 16:12:53 +0100
 
 hslogstash (0.2.2) lucid; urgency=low
 

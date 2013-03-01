@@ -43,7 +43,7 @@ esConduit r h p prefix = CL.map (map prepareBS) =$= CL.mapM sendBulk
                       , port = p
                       , path = "/_bulk"
                       , method = "POST"
-                      , checkStatus = (\_ _ -> Nothing)
+                      , checkStatus = (\_ _ _ -> Nothing)
                       }
         prepareBS :: LogstashMessage -> Either (LogstashMessage, Value) (LogstashMessage, Value, Value)
         prepareBS input =
