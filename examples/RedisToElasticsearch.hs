@@ -31,5 +31,5 @@ main = do
                     $= concatFlush 100 -- convert to a flush conduit
                     $= mapFlushMaybe (decode . BSL.fromStrict) -- decode the json messages
                     $= groupFlush -- regroup lists
-                    $= esConduit Nothing (BS.pack eshost) (read esport) -- send to ES
+                    $= esConduit Nothing (BS.pack eshost) (read esport) "logstash" -- send to ES
                     $$ CL.mapM_ (mapM_ endsink)
