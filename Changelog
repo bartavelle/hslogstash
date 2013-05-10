@@ -1,11 +1,16 @@
+hslogstash (0.2.3.1) lucid; urgency=low
+
+  * Updated to the conduits 1.0 API.
+  * Ability to specify an arbitrary prefix for elasticsearch indexes.
+  * Basic Elasticsearch source.
+
+ -- Bartavelle <bartavelle@gmail.com>  Fri, 10 May 2013 08:55:53 +0200
+
 hslogstash (0.2.3) lucid; urgency=low
 
   * New branching system
   * Modified the Redis source so that the timeout value is controllable.
   * Various utilities have been added to handle Flush conduits.
-  * Specify an arbitrary prefix for elasticsearch indexes.
-  * Updated to the conduits 1.0 API.
-  * Basic Elasticsearch source.
 
  -- Bartavelle <bartavelle@gmail.com>  Fri, 01 Mar 2013 16:12:53 +0100
 
