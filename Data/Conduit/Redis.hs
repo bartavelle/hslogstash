@@ -11,7 +11,7 @@ import Database.Redis hiding (String, decode)
 import Control.Monad (void,replicateM, forever)
 import Control.Monad.IO.Class (liftIO, MonadIO)
 import Data.Either (rights)
-import Data.Maybe (catMaybes)
+import Data.Maybe (catMaybes,fromMaybe,isNothing)
 import Control.Exception
 import Control.Concurrent hiding (yield)
 
@@ -22,27 +22,27 @@ mp (Right (Just (_, x))) = Just x
 mp (Right Nothing) = Nothing
 mp x = trace (show x) Nothing
 
-safePush :: BS.ByteString -> MVar Connection -> ConnectInfo -> BS.ByteString -> IO ()
-safePush list mconn cinfo input = catch mypush (\SomeException{} -> resetMVar)
+safePush :: BS.ByteString -> MVar Connection -> ConnectInfo -> (BS.ByteString -> IO ()) -> BS.ByteString -> IO ()
+safePush list mconn cinfo logfn input = catch mypush (\SomeException{} -> resetMVar)
     where
         resetMVar = do
             void $ takeMVar mconn
             connect cinfo >>= putMVar mconn
-            BS.putStrLn "reconnecting to redis server ..."
+            logfn "reconnecting to redis server ..."
             threadDelay 500000
-            safePush list mconn cinfo input
+            safePush list mconn cinfo logfn input
         mypush = do
             conn <- readMVar mconn
             x <- runRedis conn (lpush list [input])
             case x of
                 Left (SingleLine "OK") -> return ()
                 Right _ -> return ()
-                err -> BS.putStrLn ("retrying ... " `BS.append` BS.pack (show err)) >> threadDelay 500000 >> safePush list mconn cinfo input
+                err -> logfn ("retrying ... " `BS.append` BS.pack (show err)) >> threadDelay 500000 >> safePush list mconn cinfo logfn input
 
 popN :: BS.ByteString -> Int -> Integer -> Redis [BS.ByteString]
 popN l n to = do
     f <- fmap mp (brpop [l] to)
-    if f == Nothing
+    if isNothing f
         then return [] -- short circuiting
         else do
             nx <- fmap rights $ replicateM (n-1) (rpop l)
@@ -66,8 +66,10 @@ redisSink :: (MonadResource m)
           => HostName         -- ^ Hostname of the Redis server
           -> Int              -- ^ Port of the Redis server (usually 6379)
           -> BS.ByteString    -- ^ Name of the list
+          -> Maybe (BS.ByteString -> IO ()) -- ^ Command used to log various errors. Defaults to BS.putStrLn. It shoud not fail !
           -> Sink BS.ByteString m ()
-redisSink h p list =
+redisSink h p list logcmd =
     let cinfo = defaultConnectInfo { connectHost = h, connectPort = PortNumber $ fromIntegral p }
-    in  bracketP (connect cinfo >>= newMVar) (const $ return ()) (\mconn -> CL.mapM_ (liftIO . safePush list mconn cinfo))
+        logfunc = fromMaybe BS.putStrLn logcmd
+    in  bracketP (connect cinfo >>= newMVar) (const $ return ()) (\mconn -> CL.mapM_ (liftIO . safePush list mconn cinfo logfunc))
 
