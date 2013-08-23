@@ -1,6 +1,33 @@
-{-| Branching conduits
+{-| @WARNING: executables using this function must be compiled with -threaded@
 
-WARNING: executables using this function must be compiled with -threaded
+These functions let you connect several sinks to a single source, according to a branching strategy. For example :
+
+@
+module Main where
+
+import Data.Conduit.Branching
+import Data.Conduit
+import qualified Data.Conduit.List as CL
+import Control.Monad.IO.Class
+
+src :: Monad m => Producer m (Either Int String)
+src = CL.sourceList [Left 5, Left 4, Right \"five\", Right \"four\"]
+
+sinkString :: (Monad m, MonadIO m) => Sink (Either Int String) m ()
+sinkString = CL.mapM_ $ \(Right x) -> liftIO (putStrLn (\"This is a string: \" ++ x))
+
+sinkInt :: (Monad m, MonadIO m) => Sink (Either Int String) m ()
+sinkInt = CL.mapM_ $ \(Left x) -> liftIO (putStrLn (\"This is an integer: \" ++ show x))
+
+sinkLog :: (Monad m, MonadIO m) => Sink (Either Int String) m ()
+sinkLog = CL.mapM_ (liftIO . putStrLn . (\"Raw logging: \" ++) . show)
+
+main :: IO ()
+main = branchConduits src branching [sinkInt, sinkString, sinkLog]
+    where
+        branching (Left _) = [0,2]
+        branching (Right _) = [1,2]
+@
 -}
 module Data.Conduit.Branching (mkBranchingConduit, branchConduits) where
 
