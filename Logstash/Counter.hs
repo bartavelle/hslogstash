@@ -47,7 +47,6 @@ counter2collectd c sockpath nodename plugin vinstance = void $ forkIO work
                 v  <- readCounter c
                 tt <- fmap (T.pack . show . (truncate :: (RealFrac a) => a -> Integer)) getPOSIXTime
                 T.hPutStrLn h (hdr <> tt <> ":" <> T.pack (show v))
-                T.putStrLn (hdr <> tt <> ":" <> T.pack (show v))
             threadDelay 10000000
             work
 
