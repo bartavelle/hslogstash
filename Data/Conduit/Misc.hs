@@ -30,9 +30,9 @@ concatFlush initial foldfunc = concatFlush' initial
 
 -- | A generalized version of 'simpleConcatFlush' where some value is
 -- summed and the 'Flush' is sent when it reaches a threshold.
-concatFlushSum :: Monad m
-               => (a -> Integer) -- ^ Convert your input value into an Integer, usually a size
-               -> Integer -- ^ The threshold value
+concatFlushSum :: (Num n, Ord n, Monad m)
+               => (a -> n) -- ^ Convert your input value into an Integer, usually a size
+               -> n -- ^ The threshold value
                -> Conduit [a] m (Flush a)
 concatFlushSum tolength maxlength = concatFlush 0 foldfunc
     where
