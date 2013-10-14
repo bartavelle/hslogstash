@@ -1,8 +1,14 @@
+hslogstash (0.3.1) precise; urgency=low
+
+  * Generalize the concatFlushSum function.
+
+ -- Bartavelle <bartavelle@gmail.com>  Mon, 14 Oct 2013 15:20:56 +0200
+
 hslogstash (0.3.0) lucid; urgency=low
 
   * Generalized the flushing conduit stuff, breaking the API.
 
- -- Bartavelle <bartavelle@gmail.com>  Fri, 10 May 2013 08:55:53 +0200
+ -- Bartavelle <bartavelle@gmail.com>  Mon, 14 Oct 2013 15:00:26 +0200
 
 hslogstash (0.2.3.1) lucid; urgency=low
 
