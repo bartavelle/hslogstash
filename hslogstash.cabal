@@ -24,3 +24,13 @@ library
   ghc-options:         -Wall
   -- other-modules:       
   build-depends:       base <5, aeson, network, bytestring, text, vector, unordered-containers, time, text-format, attoparsec, hedis, conduit >= 1.0.0, transformers, http-conduit, iconv, network-conduit, containers, parallel-io, stm-conduit, http-types, stm
+
+Test-Suite conduits
+    hs-source-dirs: tests
+    type:           exitcode-stdio-1.0
+    ghc-options:    -Wall -rtsopts -threaded
+    extensions:     OverloadedStrings
+    build-depends:  base <5, hslogstash, conduit, QuickCheck, hspec, transformers, stm
+    main-is:        conduits.hs
+
+

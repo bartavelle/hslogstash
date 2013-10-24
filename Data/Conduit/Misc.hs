@@ -15,7 +15,7 @@ simpleConcatFlush mx = concatFlush 0 sendf
     where
         sendf curx ev = do
             yield (Chunk ev)
-            if curx >= mx
+            if curx >= (mx - 1)
                 then yield Flush >> return 0
                 else return (curx+1)
 
@@ -53,7 +53,7 @@ concatFlushSum tolength maxlength = concatFlush 0 foldfunc
 groupFlush :: (Monad m) => Conduit (Flush a) m [a]
 groupFlush = grouper []
     where
-        grouper lst = await >>= maybe (return ()) (handle lst)
+        grouper lst = await >>= maybe (unless (null lst) (yield (reverse lst))) (handle lst)
         handle lst Flush = do
             unless (null lst) (yield (reverse lst))
             grouper []
