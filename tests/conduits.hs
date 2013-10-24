@@ -9,15 +9,20 @@ import Data.Functor.Identity
 import Control.Monad.IO.Class
 import Data.Conduit.Branching
 import Control.Concurrent.STM
+import Data.List.Split (chunksOf)
+import Data.Either (lefts,rights)
 
 main :: IO ()
 main = hspec $ do
     describe "concat" $ do
-        it "should work just like Prelude.concat" $ do
-            property $ \x ->
-                let y = runIdentity $ CL.sourceList (x :: [[Int]]) $= CM.concat $$ CL.consume
-                in y == Prelude.concat x
+        it "should work just like Prelude.concat" $ property $ \x ->
+            let y = runIdentity $ CL.sourceList (x :: [[Int]]) $= CM.concat $$ CL.consume
+            in y == Prelude.concat x
     describe "simpleConcatFlush" $ do
+        it "should behave like chunksOf for simple lists" $ property $ \x -> do
+            chunksize <- suchThat arbitrary (>0)
+            let y = runIdentity $ CL.sourceList ([x] :: [[Int]]) $= simpleConcatFlush chunksize $= groupFlush $$ CL.consume
+            return $ y == chunksOf chunksize x
         it "should separate a list when max = 1" $ do
             x <- CL.sourceList [ [1,2,3,4,5,6] :: [Int] ] $= simpleConcatFlush 1 $= groupFlush $$ CL.consume
             x `shouldBe` map return [1,2,3,4,5,6]
@@ -38,19 +43,19 @@ main = hspec $ do
             x <- CL.sourceList [ [1,2,0,0,0,6,3,2,0,0,1] :: [Int] ] $= concatFlushSum id 3 $= groupFlush $$ CL.consume
             x `shouldBe` [[1,2,0,0,0],[6],[3],[2,0,0,1]]
     describe "branching" $ do
-        it "should branch simple eithers" $ do
+        it "should branch simple eithers" $ property $ \lst -> do
             tsink0 <- newTVarIO []
             tsink1 <- newTVarIO []
             tsink2 <- newTVarIO []
-            let lst = [Left 5, Left 4, Right "five", Right "four"] :: [Either Int String]
-                source = CL.sourceList lst
-                sink0 = CL.mapM_ (\(Left x)  -> liftIO $ atomically $ modifyTVar tsink0 (\t -> x : t))
-                sink1 = CL.mapM_ (\(Right x) -> liftIO $ atomically $ modifyTVar tsink1 (\t -> x : t))
-                sink2 = CL.mapM_ (\x -> liftIO $ atomically $ modifyTVar tsink2 (\t -> x : t))
-                branching (Left _) = [0,2]
+            let source = CL.sourceList (lst :: [Either Int String])
+                sappend f s = CL.mapM_ (\x -> liftIO $ atomically $ modifyTVar s (f x :))
+                sink0 = sappend (\(Left x)  -> x) tsink0
+                sink1 = sappend (\(Right x) -> x) tsink1
+                sink2 = sappend id                tsink2
+                branching (Left _)  = [0,2]
                 branching (Right _) = [1,2]
             branchConduits source branching [sink0, sink1, sink2]
             o0 <- atomically (readTVar tsink0)
             o1 <- atomically (readTVar tsink1)
             o2 <- atomically (readTVar tsink2)
-            (o0,o1,o2) `shouldBe` (reverse [5,4],reverse ["five","four"],reverse lst)
+            (o0,o1,o2) `shouldBe` (reverse (lefts lst),reverse (rights lst),reverse lst)

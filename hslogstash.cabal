@@ -30,7 +30,7 @@ Test-Suite conduits
     type:           exitcode-stdio-1.0
     ghc-options:    -Wall -rtsopts -threaded
     extensions:     OverloadedStrings
-    build-depends:  base <5, hslogstash, conduit, QuickCheck, hspec, transformers, stm
+    build-depends:  base <5, hslogstash, conduit, QuickCheck, hspec, transformers, stm, split
     main-is:        conduits.hs
 
 
