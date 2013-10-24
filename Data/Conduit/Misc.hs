@@ -10,7 +10,7 @@ concat = awaitForever (mapM_ yield)
 -- | Converts a stream of [a] into a stream of (Flush a). This is done by
 -- sending a Flush when the input is the empty list, or that we reached
 -- a certain threshold
-simpleConcatFlush :: (Monad m) => Integer -> Conduit [a] m (Flush a)
+simpleConcatFlush :: (Monad m) => Int -> Conduit [a] m (Flush a)
 simpleConcatFlush mx = concatFlush 0 sendf
     where
         sendf curx ev = do
