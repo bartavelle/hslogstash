@@ -23,7 +23,7 @@ library
   extensions:          OverloadedStrings, BangPatterns
   ghc-options:         -Wall
   -- other-modules:       
-  build-depends:       base <5, aeson, network, bytestring, text, vector, unordered-containers, time, text-format, attoparsec, hedis, conduit >= 1.0.0, transformers, http-conduit, iconv, network-conduit, containers, parallel-io, stm-conduit, http-types, stm
+  build-depends:       base <5, aeson, network, bytestring, text, vector, unordered-containers, time, text-format, attoparsec, hedis, conduit >= 1.0.0, transformers, http-conduit, iconv, network-conduit, containers, parallel-io, stm-conduit, http-types, stm, stm-chans
 
 Test-Suite conduits
     hs-source-dirs: tests

@@ -9,8 +9,9 @@ import Data.Functor.Identity
 import Control.Monad.IO.Class
 import Data.Conduit.Branching
 import Control.Concurrent.STM
-import Data.List.Split (chunksOf)
+import Data.List.Split (chunksOf,splitOn)
 import Data.Either (lefts,rights)
+import Data.Maybe (catMaybes)
 
 main :: IO ()
 main = hspec $ do
@@ -19,10 +20,13 @@ main = hspec $ do
             let y = runIdentity $ CL.sourceList (x :: [[Int]]) $= CM.concat $$ CL.consume
             in y == Prelude.concat x
     describe "simpleConcatFlush" $ do
-        it "should behave like chunksOf for simple lists" $ property $ \x -> do
+        it "should behave like expected for simple lists" $ property $ \x -> do
             chunksize <- suchThat arbitrary (>0)
-            let y = runIdentity $ CL.sourceList ([x] :: [[Int]]) $= simpleConcatFlush chunksize $= groupFlush $$ CL.consume
-            return $ y == chunksOf chunksize x
+            let y = runIdentity $ CL.sourceList (x :: [[Int]]) $= simpleConcatFlush chunksize $= groupFlush $$ CL.consume
+                toMaybeList [] = [Nothing]
+                toMaybeList k = map Just k
+                z = concatMap (chunksOf chunksize . catMaybes) $ splitOn [Nothing] $ concatMap toMaybeList x
+            return (y == z)
         it "should separate a list when max = 1" $ do
             x <- CL.sourceList [ [1,2,3,4,5,6] :: [Int] ] $= simpleConcatFlush 1 $= groupFlush $$ CL.consume
             x `shouldBe` map return [1,2,3,4,5,6]
@@ -58,4 +62,6 @@ main = hspec $ do
             o0 <- atomically (readTVar tsink0)
             o1 <- atomically (readTVar tsink1)
             o2 <- atomically (readTVar tsink2)
-            (o0,o1,o2) `shouldBe` (reverse (lefts lst),reverse (rights lst),reverse lst)
+            let result = (o0,o1,o2)
+                expected = (reverse (lefts lst),reverse (rights lst),reverse lst)
+            result `shouldBe` expected

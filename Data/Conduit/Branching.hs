@@ -37,21 +37,22 @@ import Control.Monad
 import Control.Monad.IO.Class (liftIO)
 import qualified Data.IntMap as IntMap
 import Data.Maybe (mapMaybe)
-import Control.Concurrent.ParallelIO
-import Data.Conduit.TMChan
+import Control.Concurrent.ParallelIO.Local
+import Control.Concurrent.STM.TBMQueue
+import Data.Conduit.TQueue
 import GHC.Conc (atomically)
 
 mkSink :: (MonadResource m)
        => (a -> [Int])
-       -> [TBMChan a]
+       -> [TBMQueue a]
        -> Sink a m ()
 mkSink brfunc chans =
     let cmap       = IntMap.fromList $ zip [0..] chans -- creates an intmap with all output channels
-        querymap x = IntMap.lookup x cmap              -- query the intmap to get a Maybe (TBMChan a)
-        cleanup = mapM_ (liftIO . atomically . closeTBMChan) chans -- this is the cleanup function that closes all chans
+        querymap x = IntMap.lookup x cmap              -- query the intmap to get a Maybe (TQueue a)
+        cleanup = mapM_ (liftIO . atomically . closeTBMQueue) chans -- this is the cleanup function that closes all chans
         inject input =
             let outchans = mapMaybe querymap (brfunc input) -- compiles the list of output channels
-            in  mapM_ (\c -> liftIO $ atomically $ writeTBMChan c input) outchans -- and write into them
+            in  mapM_ (\c -> liftIO $ atomically $ writeTBMQueue c input) outchans -- and write into them
     in  addCleanup (const cleanup) (CL.mapM_ inject)
 
 mkBranchingConduit :: (MonadResource m)
@@ -59,16 +60,17 @@ mkBranchingConduit :: (MonadResource m)
                     -> (a -> [Int]) -- ^ Branching function, where 0 is the first branch
                     -> IO (Sink a m (), [Source m a]) -- ^ Returns a sink and N sources
 mkBranchingConduit nbbranches brfunction = do
-    chans <- replicateM nbbranches (newTBMChanIO 16)
-    return (mkSink brfunction chans, map sourceTBMChan chans)
+    chans <- replicateM nbbranches (newTBMQueueIO 16)
+    return (mkSink brfunction chans, map sourceTBMQueue chans)
 
 branchConduits :: Source (ResourceT IO) a       -- ^ The source to branch from
                -> (a -> [Int])                  -- ^ The branching function (0 is the first sink)
                -> [Sink a (ResourceT IO) ()]    -- ^ The destination sinks
                -> IO ()                         -- ^ Results of the sinks
 branchConduits src brfunc sinks = do
-    (newsink, sources) <- mkBranchingConduit (length sinks) brfunc
+    let nbsinks = length sinks
+    (newsink, sources) <- mkBranchingConduit nbsinks brfunc
     let srcconduit = src $$ newsink
         dstconduits = map (uncurry ($$)) (zip sources sinks)
         actions = map runResourceT (srcconduit : dstconduits)
-    parallel_ actions
+    withPool (nbsinks + 1) $ \pool -> parallel_ pool actions
