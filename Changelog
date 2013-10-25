@@ -1,3 +1,9 @@
+hslogstash (0.3.3) precise; urgency=low
+
+  * Fixed the .cabal to follow the PVP.
+
+ -- Bartavelle <bartavelle@gmail.com>  Fri, 25 Oct 2013 14:00:52 +0200
+
 hslogstash (0.3.2) precise; urgency=low
 
   * Some tests ...
