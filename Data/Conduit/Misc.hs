@@ -1,3 +1,5 @@
+-- | Various conduit functions, mostly related to grouping or separating
+-- the items handled by conduits.
 module Data.Conduit.Misc where
 
 import Data.Conduit

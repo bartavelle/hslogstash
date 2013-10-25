@@ -48,6 +48,11 @@ popN l n to = do
             nx <- fmap rights $ replicateM (n-1) (rpop l)
             return $ catMaybes (f:nx)
 
+-- | This is a source that pops elements from a Redis list. It is capable
+-- of poping several elements at once, and will return lists of
+-- ByteStrings. You might then use 'Data.Conduit.Misc.concat' or the
+-- flushing facilities in "Data.Conduit.Misc" to work with individual
+-- elements.
 redisSource :: (MonadResource m)
             => HostName         -- ^ Hostname of the Redis server
             -> Int              -- ^ Port of the Redis server (usually 6379)
@@ -61,12 +66,13 @@ redisSource h p list nb to =
         myPipe conn = forever (liftIO (runRedis conn (popN list nb to)) >>= yield)
     in  bracketP (connect cinfo) (\conn -> runRedis conn (void quit)) myPipe
 
--- | Warning, this outputs strings when things go wrong!
+-- | A Sink that will let you write ByteStrings to a redis queue. It can be
+-- augmented with a logging function, that will be able to report errors.
 redisSink :: (MonadResource m)
           => HostName         -- ^ Hostname of the Redis server
           -> Int              -- ^ Port of the Redis server (usually 6379)
           -> BS.ByteString    -- ^ Name of the list
-          -> Maybe (BS.ByteString -> IO ()) -- ^ Command used to log various errors. Defaults to BS.putStrLn. It shoud not fail !
+          -> Maybe (BS.ByteString -> IO ()) -- ^ Command used to log various errors. Defaults to BS.putStrLn. It must not fail, so be careful about exceptions.
           -> Sink BS.ByteString m ()
 redisSink h p list logcmd =
     let cinfo = defaultConnectInfo { connectHost = h, connectPort = PortNumber $ fromIntegral p }

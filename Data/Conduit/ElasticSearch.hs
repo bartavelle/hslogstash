@@ -1,6 +1,6 @@
 {-# LANGUAGE RankNTypes #-}
-{-| This module exports "Conduit" interfaces to ElasticSearch. It is
-totally experimental.
+{-| This module exports "Conduit" interfaces to ElasticSearch.
+It has been used intensively in production for several month now, but at a single site.
 -}
 module Data.Conduit.ElasticSearch (esConduit, esSearchSource) where
 
@@ -69,6 +69,7 @@ instance FromJSON SearchResponse where
                             <*> v .: "took"
     parseJSON _          = mzero
 
+-- | A source of Logstash messages generated from an ElasticSearch query.
 esSearchSource :: (MonadResource m) => Maybe (Request m) -- ^ Defaults parameters for the http request to ElasticSearch. Use "Nothing" for defaults.
                -> BS.ByteString -- ^ Hostname of the ElasticSearch server
                -> Int -- ^ Port of the HTTP interface (usually 9200)
@@ -107,9 +108,9 @@ esSearchSource r h p prefix req maxsize start = self start
 safeQuery :: Request (ResourceT IO) -> IO (Response BSL.ByteString)
 safeQuery req = catch (withManager $ httpLbs req) (\e -> print (e :: SomeException) >> threadDelay 500000 >> safeQuery req)
 
--- | Takes a "LogstashMessage", and returns the result of the ES request
--- along with the value in case of errors, or ES's values in case of
--- success
+-- | Takes a "LogstashMessage", and returns the result of the ElasticSearch request
+-- along with the value in case of errors, or ElasticSearch's values in case of
+-- success.
 esConduit :: (MonadResource m) => Maybe (Request m) -- ^ Defaults parameters for the http request to ElasticSearch. Use "Nothing" for defaults.
             -> BS.ByteString -- ^ Hostname of the ElasticSearch server
             -> Int -- ^ Port of the HTTP interface (usually 9200)

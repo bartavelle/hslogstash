@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-| Network conduits that will retry sending messages forever -}
 module Data.Conduit.Network.Retry where
 
 import Prelude hiding (catch)
@@ -20,8 +21,6 @@ import Control.Monad.Trans.Class (lift)
 every time the call to 'sendAll' fails. This means that some bytes might be sent
 multiple times, if the socket fails in the middle of the sendAll call. This is
 targeted at protocols where only a full message makes sense.
-
-This is used to send a full JSON object to Logstash.
 -}
 sinkSocketRetry :: MonadResource m => IO Socket -> Int -> IO () -> Consumer ByteString m ()
 sinkSocketRetry mkSocket delay exeptionCallback =

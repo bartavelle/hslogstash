@@ -55,6 +55,8 @@ mkSink brfunc chans =
             in  mapM_ (\c -> liftIO $ atomically $ writeTBMQueue c input) outchans -- and write into them
     in  addCleanup (const cleanup) (CL.mapM_ inject)
 
+-- | Creates the /plumbing/ that might be used to connect several conduits
+-- together, based on a branching function.
 mkBranchingConduit :: (MonadResource m)
                     => Int -- ^ Number of branches
                     -> (a -> [Int]) -- ^ Branching function, where 0 is the first branch
@@ -63,6 +65,8 @@ mkBranchingConduit nbbranches brfunction = do
     chans <- replicateM nbbranches (newTBMQueueIO 16)
     return (mkSink brfunction chans, map sourceTBMQueue chans)
 
+-- | A higher level function. Given a source, a branching function and
+-- a list of sinks, this will run the conduits until completion.
 branchConduits :: Source (ResourceT IO) a       -- ^ The source to branch from
                -> (a -> [Int])                  -- ^ The branching function (0 is the first sink)
                -> [Sink a (ResourceT IO) ()]    -- ^ The destination sinks

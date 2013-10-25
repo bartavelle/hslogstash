@@ -1,3 +1,5 @@
+-- |  Datatypes, helper functions, and JSON instances for Logstash
+-- messages.
 module Logstash.Message where
 
 import Data.Aeson
@@ -13,7 +15,7 @@ import Data.Text.Format
 import Data.Attoparsec.Text
 
 {-| The Logstash message, as described in <https://github.com/logstash/logstash/wiki/logstash's-internal-message-format>.
-Please not there is no timestamp, as the logstash server will add it.
+Please note that it is good practice to forget about the timestamp when creating messages (set 'logstashTime' to 'Nothing'), as it should be a responsability of the Logstash server to add it.
 -}
 data LogstashMessage = LogstashMessage
                      { logstashType    :: T.Text
@@ -63,7 +65,7 @@ logstashTimestamp (UTCTime d t) = TL.toStrict $! format "{}-{}-{}T{}:{}:{}.{}Z" 
         (seconds, fminutes) = reduce fseconds 60
         (minutes, hours)    = reduce fminutes 60
 
--- | This parses the logstash format
+-- | This parses the logstash time format.
 parseLogstashTime :: T.Text -> Maybe UTCTime
 parseLogstashTime t = case parseOnly prs t of
                           Right r -> Just r
@@ -124,6 +126,9 @@ addLogstashTime msg = case logstashTime msg of
                               curtime <- getCurrentTime
                               return msg { logstashTime = Just curtime }
 
-addLogstashTag :: T.Text -> LogstashMessage -> LogstashMessage
+-- | Adds a tag to a logstash message.
+addLogstashTag :: T.Text -- ^ The tag to add
+               -> LogstashMessage
+               -> LogstashMessage
 addLogstashTag tag msg = msg { logstashTags = tag : logstashTags msg }
 
