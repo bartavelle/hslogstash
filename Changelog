@@ -4,7 +4,7 @@ hslogstash (0.3.2) precise; urgency=low
   * Fix bug related to finalization of chunked conduits.
   * Fix bug related to incorrect completion of branching conduit threads.
 
- -- Bartavelle <bartavelle@gmail.com>  Fri, 25 Oct 2013 08:02:50 +0200
+ -- Bartavelle <bartavelle@gmail.com>  Fri, 25 Oct 2013 13:52:50 +0200
 
 hslogstash (0.3.1) precise; urgency=low
 
