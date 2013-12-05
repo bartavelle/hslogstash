@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 {-| This module is not very well named, as it has almost nothing to do with
 Logstash. It is used to define counters that will then be logged by collectd.
 
@@ -59,20 +60,25 @@ counter2collectd :: Counter  -- ^ the counter to export
                  -> String   -- ^ name of the plugin + instance
                  -> String   -- ^ name of the counter instance
                  -> IO ()
-counter2collectd c sockpath nodename plugin vinstance = void $ forkIO work
+counter2collectd c sockpath nodename plugin vinstance = void $ forkIO $ forever work
     where
         hdr = "PUTVAL " <> T.pack nodename <> "/" <> T.pack plugin <> "/derive-" <> T.pack vinstance <> " interval=10 "
-        collectdConnect :: IO Handle
-        collectdConnect = do
-                soc <- socket AF_UNIX Stream 0
+        work = do
+            threadDelay 10000000
+            soc <- socket AF_UNIX Stream 0
+            eh <- try $ do
                 connect soc (SockAddrUnix sockpath)
                 socketToHandle soc ReadWriteMode
-        work = do
-            bracket collectdConnect hClose $ \h -> do
-                v  <- readCounter c
-                tt <- fmap (T.pack . show . (truncate :: (RealFrac a) => a -> Integer)) getPOSIXTime
-                T.hPutStrLn h (hdr <> tt <> ":" <> T.pack (show v))
-                void $ T.hGetLine h
-            threadDelay 10000000
-            work
+            case eh of
+                Left (_ :: SomeException) -> sClose soc
+                Right h -> do
+                    o <- try $ do
+                        v  <- readCounter c
+                        tt <- fmap (T.pack . show . (truncate :: (RealFrac a) => a -> Integer)) getPOSIXTime
+                        T.hPutStrLn h (hdr <> tt <> ":" <> T.pack (show v))
+                        void $ T.hGetLine h
+                        hClose h
+                    case o of
+                        Right () -> return ()
+                        Left (_ :: SomeException) -> hClose h
 
