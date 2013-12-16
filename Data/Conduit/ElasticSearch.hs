@@ -2,9 +2,8 @@
 {-| This module exports "Conduit" interfaces to ElasticSearch.
 It has been used intensively in production for several month now, but at a single site.
 -}
-module Data.Conduit.ElasticSearch (esConduit, esSearchSource) where
+module Data.Conduit.ElasticSearch (esConduit, esSearchSource, esScan) where
 
-import Prelude hiding (catch)
 import Data.Maybe (fromMaybe)
 import Control.Exception
 import Data.Conduit
@@ -12,7 +11,7 @@ import qualified Data.Conduit.List as CL
 import Network.HTTP.Conduit
 import Data.Aeson
 import Control.Applicative
-import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import Data.Time
 import qualified Data.Text.Lazy.Encoding as E
@@ -24,10 +23,13 @@ import Control.Concurrent (threadDelay)
 import Data.Either (partitionEithers)
 import Data.Monoid
 import Network.HTTP.Types
+import Control.Lens hiding ((.=))
+import Control.Lens.Aeson
 
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Vector as V
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 
 data SearchObject = SearchObject { _source :: LogstashMessage
                                  , _index  :: T.Text
@@ -105,6 +107,43 @@ esSearchSource r h p prefix req maxsize start = self start
                     when (nexti < total) (self nexti)
                 _ -> yield (Left errbody)
 
+esScan :: Maybe (Request (ResourceT IO)) -- ^ Defaults parameters for the http request to ElasticSearch. Use "Nothing" for defaults.
+               -> BS.ByteString -- ^ Hostname of the ElasticSearch server
+               -> Int -- ^ Port of the HTTP interface (usually 9200)
+               -> BS.ByteString -- ^ Name of the index (Something like logstash-2013.12.06)
+               -> Int -- ^ Maximum size of each response
+               -> Producer (ResourceT IO) (Either Value [Value])
+esScan r h p indx maxsize = do
+    resp <- liftIO (safeQuery defRScan)
+    let respbody = decode (responseBody resp) :: Maybe Value
+        code = statusCode $ responseStatus resp
+    case (code, respbody ^? _Just . key "_scroll_id") of
+        (200, Just (String scrid)) -> self scrid
+        _ -> yield (Left (fromMaybe "could not parse json" respbody))
+    where
+        defR1 = fromMaybe def r
+        defRScan = defR1 { host = h
+                         , port = p
+                         , path = indx <> "/_search"
+                         , queryString = "search_type=scan&scroll=5m&size=" <> BS.pack (show maxsize)
+                         , method = "GET"
+                         , checkStatus = \_ _ _ -> Nothing
+                         }
+        self :: (MonadResource m) => T.Text -> Producer m (Either Value [Value])
+        self scrollid = do
+            let req = defRScan { path = "/_search/scroll"
+                               , queryString = "scroll=5m&scroll_id=" <> T.encodeUtf8 scrollid
+                               }
+            resp <- liftIO (safeQuery req)
+            let respbody = decode (responseBody resp) :: Maybe Value
+                mscrollid = respbody ^? _Just . key "_scroll_id"
+                mvals = respbody ^.. _Just . key "hits" . key "hits" . _Array . traverse . key "_source"
+            -- liftIO (print respbody)
+            case (mscrollid, mvals) of
+                (Just _, []) -> return ()
+                (Just (String nscr), hts) -> yield (Right hts) >> self nscr
+                _ -> yield (Left (fromMaybe "could not parse json" respbody))
+
 safeQuery :: Request (ResourceT IO) -> IO (Response BSL.ByteString)
 safeQuery req = catch (withManager $ httpLbs req) (\e -> print (e :: SomeException) >> threadDelay 500000 >> safeQuery req)
 
@@ -131,8 +170,8 @@ esConduit r h p prefix = CL.map (map prepareBS) =$= CL.mapM sendBulk
                 Nothing -> Left (input, object [ "error" .= String "Time was not supplied" ])
                 Just (UTCTime day _) ->
                     let (y,m,d) = toGregorian day
-                        index = BSL.toStrict (E.encodeUtf8 (format "{}-{}.{}.{}" (prefix, y, left 2 '0' m, left 2 '0' d)))
-                    in  Right (input, object [ "index" .= object [ "_index" .= index, "_type" .= logstashType input ] ], toJSON input)
+                        indx = BSL.toStrict (E.encodeUtf8 (format "{}-{}.{}.{}" (prefix, y, left 2 '0' m, left 2 '0' d)))
+                    in  Right (input, object [ "index" .= object [ "_index" .= indx, "_type" .= logstashType input ] ], toJSON input)
         sendBulk :: (MonadResource m) => [Either (LogstashMessage, Value) (LogstashMessage, Value, Value)] -> m [Either (LogstashMessage, Value) Value]
         sendBulk input =
             let (errors, tosend) = partitionEithers input
@@ -152,3 +191,4 @@ esConduit r h p prefix = CL.map (map prepareBS) =$= CL.mapM sendBulk
                 case items of
                     Just (Array v) -> return $ map extractErrors (zip (map fst3 tosend) (V.toList v)) ++ lerrors
                     _ -> genericError "Can't find items"
+
