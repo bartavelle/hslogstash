@@ -145,7 +145,9 @@ esScan r h p indx maxsize = do
                 _ -> yield (Left (fromMaybe "could not parse json" respbody))
 
 safeQuery :: Request (ResourceT IO) -> IO (Response BSL.ByteString)
-safeQuery req = catch (withManager $ httpLbs req) (\e -> print (e :: SomeException) >> threadDelay 500000 >> safeQuery req)
+safeQuery req = catch (withManager $ httpLbs ureq ) (\e -> print (e :: SomeException) >> threadDelay 500000 >> safeQuery req)
+    where
+        ureq = req { responseTimeout = Nothing }
 
 -- | Takes a "LogstashMessage", and returns the result of the ElasticSearch request
 -- along with the value in case of errors, or ElasticSearch's values in case of
