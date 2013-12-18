@@ -1,3 +1,9 @@
+hslogstash (0.3.5) precise; urgency=low
+
+  * Bumped text version bound.
+
+ -- Bartavelle <bartavelle@gmail.com>  Wed, 18 Dec 2013 18:50:04 +0100
+
 hslogstash (0.3.4) precise; urgency=low
 
   * Fix collectd2nagios problems.
