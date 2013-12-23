@@ -1,3 +1,9 @@
+hslogstash (0.3.6) precise; urgency=low
+
+  * Added the firehose sink.
+
+ -- Bartavelle <bartavelle@gmail.com>  Mon, 23 Dec 2013 18:19:07 +0100
+
 hslogstash (0.3.5) precise; urgency=low
 
   * Bumped text version bound.
