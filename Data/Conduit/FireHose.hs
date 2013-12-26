@@ -16,10 +16,11 @@ import qualified Data.Text as T
 import Data.Aeson
 import Blaze.ByteString.Builder.ByteString
 
--- | All clients connecting to the supplied port will start getting the
--- input of this conduit.
+-- | A web server will be launched on the specified port. The request URL
+-- must be of the form /type1,type2,type3. The client will be fed all
+-- messages matching those types.
 fireHose :: MonadIO m => Int -- ^ Port
-                      -> Int -- ^Buffer size for the fire hose threads
+                      -> Int -- ^ Buffer size for the fire hose threads
                       -> IO (Conduit LogstashMessage m LogstashMessage)
 fireHose port buffersize = firehoseConduit port buffersize getFilter serialize
     where
