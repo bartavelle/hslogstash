@@ -25,6 +25,7 @@ import Data.Monoid
 import Network.HTTP.Types
 import Control.Lens hiding ((.=))
 import Control.Lens.Aeson
+import Data.Default
 
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Vector as V
@@ -72,7 +73,7 @@ instance FromJSON SearchResponse where
     parseJSON _          = mzero
 
 -- | A source of Logstash messages generated from an ElasticSearch query.
-esSearchSource :: (MonadResource m) => Maybe (Request m) -- ^ Defaults parameters for the http request to ElasticSearch. Use "Nothing" for defaults.
+esSearchSource :: (MonadResource m) => Maybe Request -- ^ Defaults parameters for the http request to ElasticSearch. Use "Nothing" for defaults.
                -> BS.ByteString -- ^ Hostname of the ElasticSearch server
                -> Int -- ^ Port of the HTTP interface (usually 9200)
                -> BS.ByteString -- ^ Prefix of the index (usually logstash)
@@ -107,7 +108,7 @@ esSearchSource r h p prefix req maxsize start = self start
                     when (nexti < total) (self nexti)
                 _ -> yield (Left errbody)
 
-esScan :: Maybe (Request (ResourceT IO)) -- ^ Defaults parameters for the http request to ElasticSearch. Use "Nothing" for defaults.
+esScan :: Maybe Request -- ^ Defaults parameters for the http request to ElasticSearch. Use "Nothing" for defaults.
                -> BS.ByteString -- ^ Hostname of the ElasticSearch server
                -> Int -- ^ Port of the HTTP interface (usually 9200)
                -> BS.ByteString -- ^ Name of the index (Something like logstash-2013.12.06)
@@ -144,7 +145,7 @@ esScan r h p indx maxsize = do
                 (Just (String nscr), hts) -> yield (Right hts) >> self nscr
                 _ -> yield (Left (fromMaybe "could not parse json" respbody))
 
-safeQuery :: Request (ResourceT IO) -> IO (Response BSL.ByteString)
+safeQuery :: Request -> IO (Response BSL.ByteString)
 safeQuery req = catch (withManager $ httpLbs ureq ) (\e -> print (e :: SomeException) >> threadDelay 500000 >> safeQuery req)
     where
         ureq = req { responseTimeout = Nothing }
@@ -152,7 +153,7 @@ safeQuery req = catch (withManager $ httpLbs ureq ) (\e -> print (e :: SomeExcep
 -- | Takes a "LogstashMessage", and returns the result of the ElasticSearch request
 -- along with the value in case of errors, or ElasticSearch's values in case of
 -- success.
-esConduit :: (MonadResource m) => Maybe (Request m) -- ^ Defaults parameters for the http request to ElasticSearch. Use "Nothing" for defaults.
+esConduit :: (MonadResource m) => Maybe Request -- ^ Defaults parameters for the http request to ElasticSearch. Use "Nothing" for defaults.
             -> BS.ByteString -- ^ Hostname of the ElasticSearch server
             -> Int -- ^ Port of the HTTP interface (usually 9200)
             -> T.Text -- ^ Prefix of the index (usually logstash)
