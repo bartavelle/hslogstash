@@ -1,6 +1,7 @@
 hslogstash (0.3.6) precise; urgency=low
 
   * Bumped http-conduit version.
+  * Added logstash firehose
 
  -- Bartavelle <bartavelle@gmail.com>  Mon, 23 Dec 2013 18:19:07 +0100
 
