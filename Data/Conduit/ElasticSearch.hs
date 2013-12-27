@@ -108,6 +108,7 @@ esSearchSource r h p prefix req maxsize start = self start
                     when (nexti < total) (self nexti)
                 _ -> yield (Left errbody)
 
+-- | Use this function for \'scanning\' requests, using the scroll feature.
 esScan :: Maybe Request -- ^ Defaults parameters for the http request to ElasticSearch. Use "Nothing" for defaults.
                -> BS.ByteString -- ^ Hostname of the ElasticSearch server
                -> Int -- ^ Port of the HTTP interface (usually 9200)

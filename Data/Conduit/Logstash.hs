@@ -1,6 +1,6 @@
 -- | Receive logstash messages from the network, and process them with
 -- a conduit.
-module Data.Conduit.Logstash (logstashListener) where
+module Data.Conduit.Logstash (logstashListener,tryDecode) where
 
 import Data.Conduit
 import qualified Data.Conduit.Binary as CB
