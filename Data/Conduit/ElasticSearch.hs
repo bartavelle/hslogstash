@@ -24,7 +24,7 @@ import Data.Either (partitionEithers)
 import Data.Monoid
 import Network.HTTP.Types
 import Control.Lens hiding ((.=))
-import Control.Lens.Aeson
+import Data.Aeson.Lens
 import Data.Default
 
 import qualified Data.HashMap.Strict as HM
@@ -34,9 +34,9 @@ import qualified Data.Text.Encoding as T
 
 data SearchObject = SearchObject { _source :: LogstashMessage
                                  , _index  :: T.Text
-                                 , _score :: Double
-                                 , _id :: BS.ByteString
-                                 , _type :: T.Text
+                                 , _score  :: Double
+                                 , _id     :: T.Text
+                                 , _type   :: T.Text
                                  } deriving (Show)
 
 instance FromJSON SearchObject where
@@ -174,7 +174,7 @@ esConduit r h p prefix = CL.map (map prepareBS) =$= CL.mapM sendBulk
                 Nothing -> Left (input, object [ "error" .= String "Time was not supplied" ])
                 Just (UTCTime day _) ->
                     let (y,m,d) = toGregorian day
-                        indx = BSL.toStrict (E.encodeUtf8 (format "{}-{}.{}.{}" (prefix, y, left 2 '0' m, left 2 '0' d)))
+                        indx = format "{}-{}.{}.{}" (prefix, y, left 2 '0' m, left 2 '0' d)
                     in  Right (input, object [ "index" .= object [ "_index" .= indx, "_type" .= logstashType input ] ], toJSON input)
         sendBulk :: (MonadResource m) => [Either (LogstashMessage, Value) (LogstashMessage, Value, Value)] -> m [Either (LogstashMessage, Value) Value]
         sendBulk input =
@@ -183,12 +183,15 @@ esConduit r h p prefix = CL.map (map prepareBS) =$= CL.mapM sendBulk
                 body = BSL.unlines $ concatMap (\(_,x,y) -> [encode x, encode y]) tosend
                 req = defR2 { requestBody = RequestBodyLBS body }
             in do
-                res <- fmap responseBody $ liftIO $ safeQuery req
+                res' <- liftIO (safeQuery req)
                 let genericError er = return (Left (emptyLSMessage "error", object [ "error" .= T.pack er, "data" .= res ]) : lerrors)
+                    res = case E.decodeUtf8' (responseBody res') of
+                              Right x -> x ^. strict
+                              Left  _ -> "Error, would not decode"
                     getObject st (Object hh) = HM.lookup st hh
                     getObject _ _ = Nothing
                     fst3 (a,_,_) = a
-                    items = decode res >>= getObject "items"
+                    items = getObject "items" (String res)
                     extractErrors x = if (getObject "create" (snd x) >>= getObject "ok") == Just (Bool True)
                                         then Right (snd x)
                                         else Left x

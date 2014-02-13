@@ -8,7 +8,7 @@ import Logstash.Message
 
 import Data.Conduit
 import Data.Conduit.Network.Firehose
-import Network.Wai (Request,pathInfo)
+import Network.Wai (pathInfo)
 
 import qualified Data.HashSet as HS
 import qualified Data.Text as T
