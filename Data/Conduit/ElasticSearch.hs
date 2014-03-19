@@ -192,7 +192,7 @@ esConduit r h p prefix = CL.map (map prepareBS) =$= CL.mapM sendBulk
                     getObject _ _ = Nothing
                     fst3 (a,_,_) = a
                     items = getObject "items" (String res)
-                    extractErrors x = if (getObject "create" (snd x) >>= getObject "ok") == Just (Bool True)
+                    extractErrors x = if getObject "error" (snd x) == Just (Bool False)
                                         then Right (snd x)
                                         else Left x
                 case items of
