@@ -6,8 +6,6 @@ module Data.Conduit.Network.Retry where
 
 import Prelude hiding (catch)
 import Data.Conduit
-import Data.Conduit.Network
-import Network.Socket (Socket, close)
 import Network.Socket.ByteString (sendAll)
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import Control.Exception
@@ -16,6 +14,9 @@ import Control.Concurrent (threadDelay)
 import Control.Concurrent.MVar
 import Control.Monad ((>=>))
 import Control.Monad.Trans.Class (lift)
+import Control.Monad.Trans.Resource
+import Network.Socket
+import Network.BSD
 
 {-| Tentative /safe/ "Sink" for a "Socket". It should try reopening the "Socket"
 every time the call to 'sendAll' fails. This means that some bytes might be sent
@@ -23,10 +24,10 @@ multiple times, if the socket fails in the middle of the sendAll call. This is
 targeted at protocols where only a full message makes sense.
 -}
 sinkSocketRetry :: MonadResource m => IO Socket -> Int -> IO () -> Consumer ByteString m ()
-sinkSocketRetry mkSocket delay exeptionCallback =
+sinkSocketRetry mkSock delay exeptionCallback =
     let
         safeMkSocket :: IO Socket
-        safeMkSocket = catch mkSocket (\SomeException{} -> exeptionCallback >> threadDelay delay >> safeMkSocket)
+        safeMkSocket = catch mkSock (\SomeException{} -> exeptionCallback >> threadDelay delay >> safeMkSocket)
         safeSend :: MVar Socket -> ByteString -> IO ()
         safeSend s o = do
             sock <- takeMVar s
@@ -40,6 +41,17 @@ sinkSocketRetry mkSocket delay exeptionCallback =
     in  bracketP (safeMkSocket >>= newMVar) (takeMVar >=> close) push
 
 -- | A specialization of the previous Sink that opens a TCP connection.
-tcpSinkRetry :: MonadResource m => ByteString -> Int -> Int -> IO () -> Consumer ByteString m ()
-tcpSinkRetry host port = sinkSocketRetry (fmap fst (getSocket host port))
+tcpSinkRetry :: MonadResource m => String -> Int -> Int -> IO () -> Consumer ByteString m ()
+tcpSinkRetry host port = sinkSocketRetry getSock
+    where
+        getSock = do
+            proto <- getProtocolNumber "tcp"
+            bracketOnError
+                (socket AF_INET Stream proto)
+                sClose
+                (\sock -> do
+                    he <- getHostByName host
+                    connect sock (SockAddrInet (PortNum (fromIntegral port)) (hostAddress he))
+                    return sock
+                )
 

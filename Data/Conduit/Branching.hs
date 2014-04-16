@@ -41,6 +41,7 @@ import Control.Concurrent.ParallelIO.Local
 import Control.Concurrent.STM.TBMQueue
 import Data.Conduit.TQueue
 import GHC.Conc (atomically)
+import Control.Monad.Trans.Resource
 
 mkSink :: (MonadResource m)
        => (a -> [Int])

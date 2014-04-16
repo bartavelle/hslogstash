@@ -14,6 +14,7 @@ import Data.Either (rights)
 import Data.Maybe (catMaybes,fromMaybe,isNothing)
 import Control.Exception
 import Control.Concurrent hiding (yield)
+import Control.Monad.Trans.Resource
 
 import Debug.Trace
 

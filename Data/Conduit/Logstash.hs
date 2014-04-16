@@ -30,6 +30,6 @@ tryDecode i =
 -- It will try to decode the Bytestring as UTF-8, and, if it fails, as
 -- Latin1.
 logstashListener :: Int -- ^ Port number
-                 -> Sink (Either BS.ByteString LogstashMessage) (ResourceT IO) ()
+                 -> Sink (Either BS.ByteString LogstashMessage) IO ()
                  -> IO ()
-logstashListener port sink = runResourceT $ runTCPServer (serverSettings port HostAny) (\app -> appSource app $= CB.lines $= CL.map tryDecode $$ sink)
+logstashListener port sink = runTCPServer (serverSettings port "*") (\app -> appSource app $= CB.lines $= CL.map tryDecode $$ sink)

@@ -26,6 +26,7 @@ import Network.HTTP.Types
 import Control.Lens hiding ((.=))
 import Data.Aeson.Lens
 import Data.Default
+import Control.Monad.Trans.Resource
 
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Vector as V
