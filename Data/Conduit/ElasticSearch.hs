@@ -28,8 +28,6 @@ import Data.Aeson.Lens
 import Data.Default
 import Control.Monad.Trans.Resource
 
-import qualified Data.HashMap.Strict as HM
-import qualified Data.Vector as V
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 
@@ -82,7 +80,7 @@ esSearchSource :: (MonadResource m) => Maybe Request -- ^ Defaults parameters fo
                -> Int -- ^ Maximum size of each response
                -> Int -- ^ start
                -> Producer m (Either Value [LogstashMessage])
-esSearchSource r h p prefix req maxsize start = self start
+esSearchSource r h p prefix req maxsize = self
     where
         defR1 = fromMaybe def r
         defR2 = defR1 { host = h
@@ -167,7 +165,7 @@ esConduit r h p prefix = CL.map (map prepareBS) =$= CL.mapM sendBulk
                       , port = p
                       , path = "/_bulk"
                       , method = "POST"
-                      , checkStatus = (\_ _ _ -> Nothing)
+                      , checkStatus = \_ _ _ -> Nothing
                       }
         prepareBS :: LogstashMessage -> Either (LogstashMessage, Value) (LogstashMessage, Value, Value)
         prepareBS input =
@@ -185,19 +183,16 @@ esConduit r h p prefix = CL.map (map prepareBS) =$= CL.mapM sendBulk
                 req = defR2 { requestBody = RequestBodyLBS body }
             in do
                 res' <- liftIO (safeQuery req)
-                let genericError er = return (Left (emptyLSMessage "error", object [ "error" .= T.pack er, "data" .= res ]) : lerrors)
-                    res = case E.decodeUtf8' (responseBody res') of
-                              Right x -> x ^. strict
-                              Left  _ -> "Error, would not decode"
-                    getObject st (Object hh) = HM.lookup st hh
-                    getObject _ _ = Nothing
-                    fst3 (a,_,_) = a
-                    items = getObject "items" (String res)
-                    extractErrors x = Right (snd x)
-                    extractErrors x = if getObject "error" (snd x) == Just (Bool False)
-                                        then Right (snd x)
-                                        else Left x
-                case items of
-                    Just (Array v) -> return $ map extractErrors (zip (map fst3 tosend) (V.toList v)) ++ lerrors
-                    _ -> genericError "Can't find items"
+                let genericError er = return (Left (emptyLSMessage "error", object [ ("error", String er), ("data", String text) ]) : lerrors)
+                    items = responseBody res' ^.. _Object . ix "items" . _Array . traverse
+                    text = case E.decodeUtf8' (responseBody res') of
+                               Right x -> x ^. strict
+                               Left  _ -> "Error, would not decode"
+                    extractErrors :: (LogstashMessage, Value, Value) -> Value -> Either (LogstashMessage, Value) Value
+                    extractErrors v' res = case res ^? _Object . ix "create" . _Object . ix "status" . _Number of
+                                               Just 201 -> Right (v' ^. _3)
+                                               _        -> Left (v' ^. _1, res)
+                if length items /= length tosend
+                    then genericError ("Can't find items " <> text)
+                    else return $ zipWith extractErrors tosend items ++ lerrors
 
