@@ -9,12 +9,13 @@ import Network
 import Control.Concurrent.MVar
 import Database.Redis hiding (String, decode)
 import Control.Monad (void,replicateM, forever)
-import Control.Monad.IO.Class (liftIO, MonadIO)
+import Control.Monad.IO.Class (liftIO)
 import Data.Either (rights)
 import Data.Maybe (catMaybes,fromMaybe,isNothing)
 import Control.Exception
 import Control.Concurrent hiding (yield)
 import Control.Monad.Trans.Resource
+import Control.Applicative
 
 import Debug.Trace
 
@@ -46,7 +47,7 @@ popN l n to = do
     if isNothing f
         then return [] -- short circuiting
         else do
-            nx <- fmap rights $ replicateM (n-1) (rpop l)
+            nx <- rights <$> replicateM (n-1) (rpop l)
             return $ catMaybes (f:nx)
 
 -- | This is a source that pops elements from a Redis list. It is capable

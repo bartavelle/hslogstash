@@ -12,6 +12,7 @@ import qualified Data.ByteString as BS
 import Codec.Text.IConv
 import Data.Text.Encoding
 import Logstash.Message
+import Control.Monad.Trans.Resource
 
 -- | Decodes JSON data from ByteStrings that can be encoded in UTF-8 or
 -- latin1.
@@ -30,6 +31,6 @@ tryDecode i =
 -- It will try to decode the Bytestring as UTF-8, and, if it fails, as
 -- Latin1.
 logstashListener :: Int -- ^ Port number
-                 -> Sink (Either BS.ByteString LogstashMessage) IO ()
+                 -> Sink (Either BS.ByteString LogstashMessage) (ResourceT IO) ()
                  -> IO ()
-logstashListener port sink = runTCPServer (serverSettings port "*") (\app -> appSource app $= CB.lines $= CL.map tryDecode $$ sink)
+logstashListener port sink = runTCPServer (serverSettings port "*") (\app -> runResourceT (appSource app $= CB.lines $= CL.map tryDecode $$ sink))
