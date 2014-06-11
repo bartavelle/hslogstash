@@ -9,6 +9,7 @@ import Control.Exception
 import Data.Conduit
 import qualified Data.Conduit.List as CL
 import Network.HTTP.Conduit
+import Network.HTTP.Client ()
 import Data.Aeson
 import Control.Applicative
 import qualified Data.ByteString.Char8 as BS
