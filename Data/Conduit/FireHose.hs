@@ -16,6 +16,7 @@ import qualified Data.Text as T
 import Data.Aeson
 import Blaze.ByteString.Builder.ByteString
 import Data.Monoid
+import Data.Maybe (fromMaybe)
 
 {-| A web server will be launched on the specified port. Clients can
 request URLs of the form /type1,type2,type3. They will be fed all
@@ -39,6 +40,6 @@ fireHose port buffersize = firehoseConduit port buffersize getFilter serialize
         serialize = (<> fromByteString "\n") . fromLazyByteString . encode
         getFilter r = case pathInfo r of
                           [p] -> let set = HS.fromList $ T.splitOn "," p
-                                 in  flip HS.member set . logstashType
+                                 in  flip HS.member set . fromMaybe "empty" . logstashType
                           _ -> error "invalid url"
 

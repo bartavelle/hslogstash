@@ -18,21 +18,21 @@ import Data.Attoparsec.Text
 Please note that it is good practice to forget about the timestamp when creating messages (set 'logstashTime' to 'Nothing'), as it should be a responsability of the Logstash server to add it.
 -}
 data LogstashMessage = LogstashMessage
-                     { logstashType    :: T.Text
-                     , logstashSource  :: T.Text
+                     { logstashType    :: Maybe T.Text
+                     , logstashSource  :: Maybe T.Text
                      , logstashTags    :: [T.Text]
-                     , logstashFields  :: Value
+                     , logstashFields  :: Maybe Value
                      , logstashContent :: T.Text
                      , logstashTime    :: Maybe UTCTime
                      } deriving (Show, Eq)
 
 instance FromJSON LogstashMessage where
     parseJSON (Object v) = LogstashMessage
-                        <$> v .:  "@type"
-                        <*> v .:  "@source"
-                        <*> v .:  "@tags"
-                        <*> v .:  "@fields"
-                        <*> v .:  "@message"
+                        <$> v .:? "@type"
+                        <*> v .:? "@source"
+                        <*> v .:  "tags"
+                        <*> v .:? "@fields"
+                        <*> v .:  "message"
                         <*> v .:? "@timestamp"
     parseJSON _          = mzero
 
@@ -40,14 +40,20 @@ instance FromJSON LogstashMessage where
 updating the message field.
 -}
 emptyLSMessage :: T.Text -> LogstashMessage
-emptyLSMessage m = LogstashMessage "empty" "dummy" [] (object []) m Nothing
+emptyLSMessage m = LogstashMessage 
+  (Just "empty") 
+  (Just "dummy") 
+  [] 
+  (Just $ object []) 
+  m 
+  Nothing
 
 instance ToJSON LogstashMessage where
     toJSON (LogstashMessage ty s ta f c ts) = object $ [ "@type"    .= ty
                                                        , "@source"  .= s
-                                                       , "@tags"    .= ta
+                                                       , "tags"     .= ta
                                                        , "@fields"  .= f
-                                                       , "@message" .= c
+                                                       , "message"  .= c
                                                        ] ++ case ts of
                                                                 Nothing -> []
                                                                 Just  t -> [ "@timestamp" .= t ]
@@ -95,10 +101,10 @@ value2logstash (Object m) =
         mflds = case HM.lookup "@fields" m of
                     Just x -> x
                     Nothing -> Null
-        mtags = case HM.lookup "@tags" m of
+        mtags = case HM.lookup "tags" m of
                     Just (Array v) -> toTags (V.toList v)
                     _ -> Nothing
-        mmsg  = case HM.lookup "@message" m of
+        mmsg  = case HM.lookup "message" m of
                     Just (String x) -> x
                     _ -> ""
         mts   = case HM.lookup "@timestamp" m of
@@ -110,11 +116,11 @@ value2logstash (Object m) =
                 isString _ = False
                 toText (String x) = x
                 toText _ = ""
-            in  if null (filter (not . isString) v)
+            in  if not (any (not . isString) v)
                     then Just (map toText v)
                     else Nothing
     in case (mtype, msrc, mtags) of
-           (Just (String t), Just (String s), Just tags) -> Just $ LogstashMessage t s tags mflds mmsg mts
+           (Just (String t), Just (String s), Just tags) -> Just $ LogstashMessage (Just t) (Just s) tags (Just mflds) mmsg mts
            _ -> Nothing
 value2logstash _ = Nothing
 
