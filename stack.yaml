@@ -1,0 +1,7 @@
+flags: {}
+packages:
+- '.'
+extra-deps:
+- iconv-0.4.1.3
+- stm-firehose-0.3.0
+resolver: lts-3.6
