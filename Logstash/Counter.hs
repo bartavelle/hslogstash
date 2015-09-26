@@ -28,6 +28,7 @@ import Data.Time.Clock.POSIX
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import Data.Monoid
+import Control.Applicative ((<$>))
 
 -- | The opaque counter type. It is actually just a 'TVar' 'Integer'.
 newtype Counter = Counter (TVar Integer)
