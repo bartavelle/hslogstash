@@ -34,7 +34,7 @@ newtype Counter = Counter (TVar Integer)
 
 -- | Gives you a new empty counter.
 newCounter :: IO Counter
-newCounter = fmap Counter $ newTVarIO 0
+newCounter = Counter <$> newTVarIO 0
 
 -- | This is a conduits-specific function that will increase a counter for
 -- each piece of data that traverses this conduit. It will not alter the
@@ -67,7 +67,7 @@ counter2collectd c sockpath nodename plugin vinstance = void $ forkIO $ forever 
             threadDelay 10000000
             soc <- socket AF_UNIX Stream 0
             eh <- try $ do
-                connect soc (SockAddrUnix sockpath)
+                Network.Socket.connect soc (SockAddrUnix sockpath)
                 socketToHandle soc ReadWriteMode
             case eh of
                 Left (_ :: SomeException) -> sClose soc

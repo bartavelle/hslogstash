@@ -51,7 +51,7 @@ tcpSinkRetry host port = sinkSocketRetry getSock
                 sClose
                 (\sock -> do
                     he <- getHostByName host
-                    connect sock (SockAddrInet (fromIntegral port) (hostAddress he))
+                    Network.Socket.connect sock (SockAddrInet (fromIntegral port) (hostAddress he))
                     return sock
                 )
 

@@ -2,7 +2,7 @@
 -}
 module Data.Conduit.Redis (redisSource, redisSink) where
 
-import Data.Conduit
+import Data.Conduit hiding (connect)
 import qualified Data.Conduit.List as CL
 import qualified Data.ByteString.Char8 as BS
 import Network

@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                hslogstash
-version:             0.4.1
+version:             0.4.2
 synopsis:            A library to work with, or as, a logstash server
 description:         This library contains a few modules that let you work with Logstash messages, read them from a Redis list, store them in or get them from Elasticsearch, and more.
 homepage:            https://github.com/bartavelle/hslogstash
@@ -24,11 +24,11 @@ library
   exposed-modules:     Logstash.Message, Logstash.IO, Data.Conduit.Redis, Data.Conduit.ElasticSearch, Data.Conduit.Logstash, Data.Conduit.Network.Retry, Data.Conduit.Branching, Data.Conduit.Misc, Logstash.Counter, Data.Conduit.FireHose
   default-extensions:  OverloadedStrings, BangPatterns
   build-depends:
-    base >=4.6 && <4.8,
-    conduit >= 1.1.7 && < 1.2,
-    bytestring >= 0.10.4.0 && < 0.11,
-    transformers >= 0.3 && < 0.4,
-    aeson >= 0.10 && < 0.11,
+    base >=4.6 && <5,
+    conduit >= 1.1.7 && < 1.3,
+    bytestring,
+    transformers >= 0.3 && < 0.5,
+    aeson >= 0.8 && < 0.11,
     parallel-io >= 0.3.3 && < 0.4,
     text,
     network,
@@ -44,14 +44,14 @@ library
     stm-conduit,
     hedis,
     stm,
-    attoparsec >= 0.13.0.1 && < 0.14,
-    lens >= 4.13 && < 4.14,
-    data-default, 
-    stm-firehose,
+    attoparsec >= 0.12 && < 0.14,
+    lens >= 4.12 && < 4.14,
+    data-default,
+    stm-firehose >= 0.3.0,
     wai,
     blaze-builder,
-    conduit-extra, 
-    resourcet, 
+    conduit-extra,
+    resourcet,
     http-client,
     conduit-extra >= 1.1.9.1 && < 1.2,
     lens-aeson >= 1.0.0.5 && < 1.1
